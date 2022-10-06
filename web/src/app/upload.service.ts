@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { HttpClient, HttpEvent, HttpEventType, HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
+import {HttpClient, HttpEvent, HttpEventType, HttpHeaders, HttpParams, HttpRequest, HttpResponse} from '@angular/common/http';
 import * as internal from 'events';
 
 export interface IS3Data {
@@ -28,10 +28,22 @@ export class UploadService {
   uploadProgress$ = new EventEmitter<any>();
   finishedProgress$ = new EventEmitter<any>();
 
-  url: string = 'https://ja82yuetbb.execute-api.ap-southeast-1.amazonaws.com/dev';
-  // url: string = 'http://localhost:3000/dev';
+  // url: string = 'https://ja82yuetbb.execute-api.ap-southeast-1.amazonaws.com/dev';
+  url = 'http://10.1.38.246:5000';
 
   constructor(private httpClient: HttpClient) {
+  }
+
+  getHeaders(method: string) {
+    const headers: any = {};
+
+    if (method === 'post') {
+      headers['Content-type'] = 'application/json';
+    }
+
+    return {
+      headers: new HttpHeaders(headers),
+    };
   }
 
   // -------------------------------
@@ -41,7 +53,6 @@ export class UploadService {
   /**
    * Initiate a multipart upload.
    *
-   * @param params
    */
   private startUpload(params: IParamStartUpload): Promise<any> {
     const httpParams = new HttpParams()
@@ -64,8 +75,6 @@ export class UploadService {
   /**
    * Upload MultiPart.
    *
-   * @param file
-   * @param tokenEmit
    */
   async uploadMultipartFile(file: any, tokenEmit: string) {
     const uploadStartResponse = await this.startUpload({
@@ -75,15 +84,16 @@ export class UploadService {
 
     try {
       const FILE_CHUNK_SIZE = 10000000; // 10MB
-      //const FILE_CHUNK_SIZE = 5000000; // 5MB
+      // const FILE_CHUNK_SIZE = 5000000; // 5MB
       const fileSize = file.size;
       const NUM_CHUNKS = Math.floor(fileSize / FILE_CHUNK_SIZE) + 1;
+      // tslint:disable-next-line:one-variable-per-declaration
       let start, end, blob;
 
-      let uploadPartsArray = [];
+      const uploadPartsArray = [];
       let countParts = 0;
 
-      let orderData = [];
+      const orderData = [];
 
       for (let index = 1; index < NUM_CHUNKS + 1; index++) {
         start = (index - 1) * FILE_CHUNK_SIZE;
@@ -98,7 +108,7 @@ export class UploadService {
 
         // (1) Generate presigned URL for each part
 
-        console.log(uploadStartResponse)
+        console.log(uploadStartResponse);
 
         const uploadUrlPresigned = await this.getPresignUrl({
           fileName: file.name,
@@ -111,7 +121,7 @@ export class UploadService {
 
         orderData.push({
           presignedUrl: uploadUrlPresigned.upload_signed_url,
-          index: index
+          index
         });
 
         const req = new HttpRequest('PUT', uploadUrlPresigned.upload_signed_url, blob, {
@@ -144,9 +154,11 @@ export class UploadService {
                 PartNumber: currentPresigned.index
               });
               if (uploadPartsArray.length === NUM_CHUNKS) {
-                console.log(file.name)
-                console.log(uploadPartsArray)
-                console.log(uploadStartResponse.upload_id)
+                console.log(file.name);
+                console.log(uploadPartsArray);
+                console.log(uploadStartResponse.upload_id);
+                const headers = this.getHeaders('post');
+                console.log(headers);
                 this.httpClient.post(`${this.url}/complete-upload`, {
                   file_name: encodeURIComponent(file.name),
                   parts: uploadPartsArray.sort((a, b) => {
