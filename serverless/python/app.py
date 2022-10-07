@@ -7,11 +7,11 @@ app = Flask(__name__)
 cors = CORS(app)
 
 
-FOLDER_UPLOAD = os.environ.get('FOLDER_UPLOAD', 'upload_part')
-ENDPOINT_URL = os.environ.get('ENDPOINT_URL', 'http://10.1.38.246:9000')
-AWS_ACCESS_ID = os.environ.get('AWS_ACCESS_ID', 'tcg')
-AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', '3e6eMbz7NRBPfjYf')
-BUCKET_NAME = os.environ.get('BUCKET_NAME', 'tcg-bucket')
+FOLDER_UPLOAD = os.environ.get('FOLDER_UPLOAD', '')
+ENDPOINT_URL = os.environ.get('ENDPOINT_URL', '')
+AWS_ACCESS_ID = os.environ.get('AWS_ACCESS_ID', '')
+AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', '')
+BUCKET_NAME = os.environ.get('BUCKET_NAME', '')
 
 
 s3 = boto3.client(
